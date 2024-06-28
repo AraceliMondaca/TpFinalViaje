@@ -191,6 +191,7 @@ class Viaje {
         $consultaModifica = "UPDATE viaje SET vdestino = '" . $this->getDestino() . "', vcantmaxpasajeros = " . $this->getCantidadPasajero() . ", idempresa = " . $this->getObjEmpresa()->getIdEmpresa() . ", idresponsable = " . $this->getObjPersonaResp()->getNumEmpleado() . ", vimporte = " . $this->getImporte() . " WHERE idviaje = " . $this->getCodigoViaje();
 
         if ($base->Iniciar()) {
+            if($this->buscar( $this->getCodigoViaje())){
             if ($base->Ejecutar($consultaModifica)) {
                 $resp = true;
             } else {
@@ -198,6 +199,7 @@ class Viaje {
             }
         } else {
             $this->setMensajeOperacion($base->getError());
+        }
         }
         return $resp;
     }
@@ -207,6 +209,7 @@ class Viaje {
         $resp = false;
         if ($base->Iniciar()) {
             $consultaBorra = "DELETE FROM viaje WHERE idviaje = " . $this->getCodigoViaje();
+            if($this->buscar( $this->getCodigoViaje())){
             if ($base->Ejecutar($consultaBorra)) {
                 $resp = true;
             } else {
@@ -215,16 +218,17 @@ class Viaje {
         } else {
             $this->setMensajeOperacion($base->getError());
         }
+    }
         return $resp;
     }
 
     public function __toString() {
-        $listaPasajeros = $this->listar(); // Assuming you want to display the list of trips
+       
         $viaje = "                 !DATOS DEL VIAJE! \n" . 
             "Codigo del Viaje: " . $this->getCodigoViaje() . "\n" . 
             "Destino: " . $this->getDestino() . "\n" .
             "Cantidad de Pasajeros: " . $this->getCantidadPasajero() . "\n" .
-            "Lista de Pasajeros: \n" . print_r($listaPasajeros, true) . "\n" .
+           // "Lista de Pasajeros: \n" . print_r($listaPasajeros, true) . "\n" .
             "Responsable: " . $this->getObjPersonaResp() . "\n" .
             "Empresa: " . $this->getObjEmpresa() . "\n" .
             "Importe: " . $this->getImporte() . "\n";

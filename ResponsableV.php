@@ -1,24 +1,21 @@
 <?php
 include_once "BaseDatos.php";
+include_once "Persona.php";
 
-class ResponsableV {
+class ResponsableV extends Persona {
     private $numEmpleado;
     private $numLicencia;
-    private $nombre;
-    private $apellido;
     private $mensajeOperacion;
 
     public function __construct() {
+        parent::__construct();
         $this->numEmpleado = 0;
         $this->numLicencia = 0;
-        $this->nombre = "";
-        $this->apellido = "";
     }
 
-    public function cargar($numLicencia, $nombre, $apellido) {
+    public function cargar($numeroDocumento,$nombre, $apellido, $telefono, $numLicencia = null) {
+        parent::cargar($numeroDocumento,$nombre, $apellido, $telefono);
         $this->setNumLicencia($numLicencia);
-        $this->setNombre($nombre);
-        $this->setApellido($apellido);
     }
 
     public function getNumEmpleado() {
@@ -29,28 +26,12 @@ class ResponsableV {
         return $this->numLicencia;
     }
 
-    public function getNombre() {
-        return $this->nombre;
-    }
-
-    public function getApellido() {
-        return $this->apellido;
-    }
-
     public function setNumEmpleado($numEmpleado) {
         $this->numEmpleado = $numEmpleado;
     }
 
     public function setNumLicencia($numLicencia) {
         $this->numLicencia = $numLicencia;
-    }
-
-    public function setNombre($nombre) {
-        $this->nombre = $nombre;
-    }
-
-    public function setApellido($apellido) {
-        $this->apellido = $apellido;
     }
 
     public function getMensajeOperacion() {
@@ -61,18 +42,16 @@ class ResponsableV {
         $this->mensajeOperacion = $mensajeOperacion;
     }
 
-    // Método para buscar un responsable por número de empleado
     public function buscar($idresponsable) {
         $base = new BaseDatos();
-        $consulta = "SELECT * FROM responsableV WHERE idresponsable = $idresponsable";
+        $consulta = "SELECT * FROM responsablev  WHERE idresponsable = $idresponsable";
         $resp = false;
         if ($base->Iniciar()) {
             if ($base->Ejecutar($consulta)) {
                 if ($row2 = $base->Registro()) {
+                    parent::buscar($row2['idresponsable']);
                     $this->setNumEmpleado($idresponsable);
-                    $this->setNumLicencia($row2['numLicencia']);
-                    $this->setNombre($row2['nombre']);
-                    $this->setApellido($row2['apellido']);
+                    $this->setNumLicencia($row2['rnumLicencia']);
                     $resp = true;
                 }
             } else {
@@ -84,54 +63,47 @@ class ResponsableV {
         return $resp;
     }
 
-    // Método estático para listar responsables según una condición opcional
-    public static function listar($condicion = "") {
-        $arregloResponsables = null;
+    public function listar($condicion = "") {
+        $arregloResponsable = null;
         $base = new BaseDatos();
-        $consulta = "SELECT * FROM responsableV";
+        $consulta = "SELECT * FROM responsablev ";
         if ($condicion != "") {
-            $consulta .= ' WHERE ' . $condicion;
+            $consulta .= " WHERE " . $condicion;
         }
-        $consulta .= " ORDER BY apellido";
-
+        $consulta .= " ORDER BY rapellido";
         if ($base->Iniciar()) {
             if ($base->Ejecutar($consulta)) {
-                $arregloResponsables = array();
+                $arregloResponsable = array();
                 while ($row2 = $base->Registro()) {
-                    $idresponsable = $row2['idresponsable'];
-                    $numLicencia = $row2['numLicencia'];
-                    $nombre = $row2['nombre'];
-                    $apellido = $row2['apellido'];
-
-                    $objResponsableV = new ResponsableV();
-                    $objResponsableV->cargar($numLicencia, $nombre, $apellido);
-                    $objResponsableV->setNumEmpleado($idresponsable);
-                    array_push($arregloResponsables, $objResponsableV);
+                    $objResponsable = new ResponsableV();
+                    $objResponsable->buscar($row2['idresponsable']);
+                    array_push($arregloResponsable, $objResponsable);
                 }
-            } else {
-                echo $base->getError();
-            }
-        } else {
-            echo $base->getError();
-        }
-        return $arregloResponsables;
-    }
-
-    public function insertar() {
-        $base = new BaseDatos();
-        $resp = false;
-        $consultaInsertar = "INSERT INTO responsableV (numLicencia, nombre, apellido) 
-                             VALUES (" . $this->getNumLicencia() . ", '" . $this->getNombre() . "', '" . $this->getApellido() . "')";
-
-        if ($base->Iniciar()) {
-            if ($idEmpleado = $base->devuelveIDInsercion($consultaInsertar)) {
-                $this->setNumEmpleado($idEmpleado);
-                $resp = true;
             } else {
                 $this->setMensajeOperacion($base->getError());
             }
         } else {
             $this->setMensajeOperacion($base->getError());
+        }
+        return $arregloResponsable;
+    }
+
+    public function insertar() {
+        $base = new BaseDatos();
+        $resp = false;
+        if (parent::insertar()) {
+            $consultaInsertar = "INSERT INTO responsableV (rnumLicencia, rnombre, rapellido) 
+                     VALUES ('" . $this->getNumLicencia() . "', '" . $this->getNombre() . "', '" . $this->getApellido() . "')";
+            if ($base->Iniciar()) {
+                if ($idResponsable = $base->devuelveIDInsercion($consultaInsertar)) {
+                    $this->setNumEmpleado($idResponsable);
+                    $resp = true;
+                } else {
+                    $this->setMensajeOperacion($base->getError());
+                }
+            } else {
+                $this->setMensajeOperacion($base->getError());
+            }
         }
         return $resp;
     }
@@ -139,27 +111,32 @@ class ResponsableV {
     public function modificar() {
         $resp = false;
         $base = new BaseDatos();
-        $consultaModifica = "UPDATE responsableV SET numLicencia = " . $this->getNumLicencia() . ", nombre = '" . $this->getNombre() . "', apellido = '" . $this->getApellido() . "' WHERE  idresponsable= " . $this->getNumEmpleado();
-        
-        if ($base->Iniciar()) {
-            if ($base->Ejecutar($consultaModifica)) {
-                $resp = true;
+        if (parent::modificar()) {
+            $consultaModifica = "UPDATE responsableV SET rnumLicencia='" . $this->getNumLicencia() . "', rnombre='" . $this->getNombre() . "', rapellido='" . $this->getApellido() . "' WHERE idresponsable='" . $this->getNumEmpleado() . "'";
+            echo "Consulta Modifica: $consultaModifica"; 
+            if ($base->Iniciar()) {
+                if ($base->Ejecutar($consultaModifica)) {
+                    $resp = true;
+                } else {
+                    $this->setMensajeOperacion($base->getError());
+                }
             } else {
                 $this->setMensajeOperacion($base->getError());
             }
-        } else {
-            $this->setMensajeOperacion($base->getError());
         }
         return $resp;
     }
+    
 
     public function eliminar() {
         $base = new BaseDatos();
         $resp = false;
         if ($base->Iniciar()) {
-            $consultaBorrar = "DELETE FROM responsableV WHERE idresponsable = " . $this->getNumEmpleado();
+            $consultaBorrar = "DELETE FROM responsablev WHERE idresponsable='" . $this->getNumEmpleado() . "'";
             if ($base->Ejecutar($consultaBorrar)) {
-                $resp = true;
+                if (parent::eliminar()) {
+                    $resp = true;
+                }
             } else {
                 $this->setMensajeOperacion($base->getError());
             }
@@ -170,11 +147,9 @@ class ResponsableV {
     }
 
     public function __toString() {
-        return "¡DATOS DE PERSONAL RESPONSABLE DEL VIAJE!\n" .
-               "Número de Empleado: " . $this->getNumEmpleado() . "\n" .
-               "Número de Licencia: " . $this->getNumLicencia() . "\n" .
-               "Nombre: " . $this->getNombre() . "\n" .
-               "Apellidos: " . $this->getApellido() . "\n";
+        return "      INFORMACION del Responsable\n" . 
+               parent::__toString() . "\n" .
+               "Número de Licencia: " . $this->getNumLicencia() . "\n";
     }
 }
 ?>

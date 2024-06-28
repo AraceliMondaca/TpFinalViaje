@@ -138,10 +138,10 @@ if ($respuesta == true) {
     echo "Error al insertar el pasajero: " . $objPasajero->getMensajeOperacion() . "\n";
 }
 //modificar Pasajero
-$idPasajeroModificar =$objPasajero->getId() ; 
+/*$idPasajeroModificar =$objPasajero->getId()+1 ; 
 $objPasajero->setId($idPasajeroModificar);
 $objPasajero->setNombre("Nombre Modificado");
-$objPasajero->setApellido("Apellido Modificado");
+$objPasajero->setApellido("Apellido Modificado");*
 
 $respuesta = $objPasajero->modificar();
 
@@ -154,10 +154,45 @@ if ($respuesta == true) {
     }
 } else {
     echo "Error al modificar el pasajero: " . $objPasajero->getMensajeOperacion() . "\n";
+}*/
+$objPasajero = new Pasajero();
+$idPasajeroModificar = 1; // Asigna el ID inicial desde donde quieres empezar
+
+$maxIntentos = 100; // Número máximo de intentos para evitar bucles infinitos
+$intentos = 0;
+$modificado = false;
+
+while ($intentos < $maxIntentos && !$modificado) {
+    $objPasajero->setId($idPasajeroModificar);
+    $objPasajero->setNombre("Nombre Modificado");
+    $objPasajero->setApellido("Apellido Modificado");
+    
+    $respuesta = $objPasajero->modificar();
+
+    if ($respuesta == true) {
+        echo "\nOP MODIFICACIÓN: Los datos del pasajero con ID $idPasajeroModificar fueron actualizados correctamente\n";
+        $modificado = true;
+
+        // Listar todos los pasajeros almacenados en la BD
+        $coleccionP = $objPasajero->listar();
+        foreach ($coleccionP as $un) {
+            echo $un;
+            echo "-------------------------------------------------------\n";
+        }
+    } else {
+        echo "Error al intentar modificar el pasajero con ID $idPasajeroModificar: " . $objPasajero->getMensajeOperacion() . "\n";
+    }
+    
+    // Incrementar el ID y el contador de intentos en cada iteración
+    $idPasajeroModificar++;
+    $intentos++;
 }
 
+   
+
+
 // Eliminar un pasajero
-$idPasajero =$objPasajero->getId() ; 
+/*$idPasajero =$objPasajero->getId()+1 ; 
 $objPasajero->setId($idPasajero);
 $respuesta = $objPasajero->eliminar();
 
@@ -170,7 +205,37 @@ if ($respuesta == true) {
     }
 } else {
     echo "Error al eliminar el pasajero: " . $objPasajero->getMensajeOperacion() . "\n";
+}*/
+$objPasajero = new Pasajero();
+$idPasajero = 1; // Asigna el ID inicial desde donde quieres empezar
+
+$maxIntentos = 10; // Número máximo de intentos para evitar bucles infinitos
+$intentos = 0;
+$eliminado = false;
+
+while ($intentos < $maxIntentos && !$eliminado) {
+    $objPasajero->setId($idPasajero);
+    $respuesta = $objPasajero->eliminar();
+
+    if ($respuesta == true) {
+        echo "\nOP ELIMINACIÓN: El pasajero con ID $idPasajero fue eliminado correctamente\n";
+        $eliminado = true;
+
+        // Listar todos los pasajeros almacenados en la BD
+        $coleccionP = $objPasajero->listar();
+        foreach ($coleccionP as $un) {
+            echo $un;
+            echo "-------------------------------------------------------\n";
+        }
+    } else {
+        echo "Error al intentar eliminar el pasajero con ID $idPasajero: " . $objPasajero->getMensajeOperacion() . "\n";
+    }
+
+    // Incrementar el ID y el contador de intentos en cada iteración
+    $idPasajero++;
+    $intentos++;
 }
+
 ///-----------------------------------------------------------------------------------------------------
 // Eliminar una empresa
 $id=$ObjEmpresa->getIdEmpresa();
